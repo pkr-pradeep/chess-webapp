@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { PieceSymbol, Color } from 'chess.js';
 
 interface StauntonChessPieceProps {
@@ -8,8 +8,15 @@ interface StauntonChessPieceProps {
 }
 
 /**
- * Staunton Chess Pieces modeled with 100% fidelity to the classic luxury Staunton set
- * as depicted in Adobe Stock #249534780 (glossy silhouette with white specular highlights).
+ * Premium Classic Staunton set.
+ *
+ * Design goals:
+ * - unmistakably Staunton, not Indian-themed
+ * - larger visual footprint inside a board square
+ * - heavier, more sculpted bases
+ * - consistent proportions across all six pieces
+ * - glossy lacquer / ivory appearance
+ * - high contrast details that remain readable at small sizes
  */
 export const StauntonChessPiece: React.FC<StauntonChessPieceProps> = React.memo(({
   type,
@@ -17,648 +24,499 @@ export const StauntonChessPiece: React.FC<StauntonChessPieceProps> = React.memo(
   className = 'w-full h-full'
 }) => {
   const isWhite = color === 'w';
+  const id = useId().replace(/:/g, '');
 
-  // Palette definition
-  // Black pieces: Deep jet-black lacquer with brilliant white specular highlights exactly as in photo
-  // White pieces: Royal ivory-white with deep slate contouring and crisp gloss highlights
-  const mainFill = isWhite ? '#F8FAFC' : '#11161F';
-  const strokeColor = isWhite ? '#1E293B' : '#090D14';
-  const strokeWidth = isWhite ? 1.6 : 1.2;
-  const highlightFill = '#FFFFFF';
-  const highlightOpacity = isWhite ? 0.75 : 0.95;
-  const shadowFill = isWhite ? '#E2E8F0' : '#0B0F16';
+  const bodyId = `piece-body-${id}`;
+  const darkId = `piece-dark-${id}`;
+  const shineId = `piece-shine-${id}`;
+
+  const body = isWhite ? '#F5F1E8' : '#121923';
+  const bodyMid = isWhite ? '#FCFAF4' : '#1C2634';
+  const bodyDark = isWhite ? '#C9C4B8' : '#080C12';
+  const outline = isWhite ? '#65707B' : '#05080D';
+  const highlight = '#FFFFFF';
+
+  const defs = (
+    <defs>
+      <linearGradient id={bodyId} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor={bodyDark} />
+        <stop offset="0.17" stopColor={body} />
+        <stop offset="0.43" stopColor={bodyMid} />
+        <stop offset="0.58" stopColor={body} />
+        <stop offset="0.84" stopColor={bodyDark} />
+        <stop offset="1" stopColor={bodyDark} />
+      </linearGradient>
+
+      <linearGradient id={darkId} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor={body} />
+        <stop offset="0.55" stopColor={bodyDark} />
+        <stop offset="1" stopColor={isWhite ? '#AAA59A' : '#05080C'} />
+      </linearGradient>
+
+      <linearGradient id={shineId} x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#FFFFFF" stopOpacity="0" />
+        <stop offset="0.42" stopColor="#FFFFFF" stopOpacity={isWhite ? '0.82' : '0.76'} />
+        <stop offset="0.62" stopColor="#FFFFFF" stopOpacity="0.14" />
+        <stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+      </linearGradient>
+    </defs>
+  );
+
+  const shadow = (
+    <ellipse
+      cx="50"
+      cy="94"
+      rx="33"
+      ry="3"
+      fill="#000"
+      opacity={isWhite ? '0.16' : '0.34'}
+    />
+  );
+
+  const base = (
+    <g>
+      {/* bottom foot */}
+      <path
+        d="M17 89.5
+           Q18 85.8 23 83.7
+           Q30 80.6 37 79.8
+           H63
+           Q70 80.6 77 83.7
+           Q82 85.8 83 89.5
+           L82 92.7
+           Q81.5 94 78.5 94
+           H21.5
+           Q18.5 94 18 92.7 Z"
+        fill={`url(#${darkId})`}
+        stroke={outline}
+        strokeWidth="1.35"
+      />
+
+      {/* upper base rim */}
+      <path
+        d="M24 84.1 Q50 81.2 76 84.1 Q75 86.8 72 87.4 H28 Q25 86.8 24 84.1 Z"
+        fill={`url(#${bodyId})`}
+        stroke={outline}
+        strokeWidth="1.1"
+      />
+
+      {/* strong polished reflections */}
+      <path
+        d="M21 89.4 Q50 87 79 89.4"
+        fill="none"
+        stroke={highlight}
+        strokeWidth="1.35"
+        strokeLinecap="round"
+        opacity={isWhite ? '0.8' : '0.82'}
+      />
+      <path
+        d="M24 92 Q50 90.7 76 92"
+        fill="none"
+        stroke={highlight}
+        strokeWidth="0.9"
+        strokeLinecap="round"
+        opacity={isWhite ? '0.46' : '0.55'}
+      />
+    </g>
+  );
+
+  const ring = (cy: number, rx: number, ry = 2.1) => (
+    <ellipse
+      cx="50"
+      cy={cy}
+      rx={rx}
+      ry={ry}
+      fill={`url(#${darkId})`}
+      stroke={outline}
+      strokeWidth="1.05"
+    />
+  );
+
+  const stemHighlight = (d: string, opacity = 0.8) => (
+    <path
+      d={d}
+      fill="none"
+      stroke={highlight}
+      strokeWidth="1.45"
+      strokeLinecap="round"
+      opacity={opacity}
+    />
+  );
 
   switch (type) {
-    case 'p': // PAWN
+    case 'p':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          {/* Base Drop Shadow for depth */}
-          <ellipse cx="50" cy="94" rx="28" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main Pawn Silhouette */}
+          {/* PAWN — broader shoulder and heavier classic base */}
           <path
-            d="
-              M 50 13.5
-              C 44.2 13.5 39.5 18.2 39.5 24
-              C 39.5 28.5 42.4 32.3 46.5 33.7
-              C 41.5 34.8 37.5 36.8 37.5 38.5
-              C 37.5 40 40 41.2 43.5 41.8
-              C 42 48 40.5 56 36.5 73.5
-              C 34.5 74.2 33 75.3 33 76.5
-              C 33 77.8 34.8 78.8 37.2 79.4
-              C 34 81 26 84.5 24 88
-              L 23 92.5
-              C 23 93.5 24 94 25.5 94
-              L 74.5 94
-              C 76 94 77 93.5 77 92.5
-              L 76 88
-              C 74 84.5 66 81 62.8 79.4
-              C 65.2 78.8 67 77.8 67 76.5
-              C 67 75.3 65.5 74.2 63.5 73.5
-              C 59.5 56 58 48 56.5 41.8
-              C 60 41.2 62.5 40 62.5 38.5
-              C 62.5 36.8 58.5 34.8 53.5 33.7
-              C 57.6 32.3 60.5 28.5 60.5 24
-              C 60.5 18.2 55.8 13.5 50 13.5
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M50 12.5
+               C43.2 12.5 38.2 17.7 38.2 24.3
+               C38.2 29.2 40.8 33 45.2 35
+               C40.3 36 36.6 37.8 36.6 39.9
+               C36.6 41.7 39.1 43 43 43.6
+               C42.2 50.2 40.7 59.4 37.4 71.8
+               C36.7 74.1 34.8 75.5 31.4 77.2
+               Q28.5 78.6 31.4 80.5
+               Q33.5 81.5 37.1 82
+               Q29.2 83.3 23.4 87.1
+               Q20.4 89.1 20 92.2
+               Q20 94 23 94
+               H77 Q80 94 80 92.2
+               Q79.6 89.1 76.6 87.1
+               Q70.8 83.3 62.9 82
+               Q66.5 81.5 68.6 80.5
+               Q71.5 78.6 68.6 77.2
+               C65.2 75.5 63.3 74.1 62.6 71.8
+               C59.3 59.4 57.8 50.2 57 43.6
+               C60.9 43 63.4 41.7 63.4 39.9
+               C63.4 37.8 59.7 36 54.8 35
+               C59.2 33 61.8 29.2 61.8 24.3
+               C61.8 17.7 56.8 12.5 50 12.5 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.5"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {/* White Shading Accent for White Pieces */}
-          {isWhite && (
-            <path
-              d="
-                M 50 14.5
-                C 45 14.5 40.5 18.7 40.5 24
-                C 40.5 28 43 31.5 47 33
-                C 42.5 34.5 38.5 36.5 38.5 38.5
-                C 38.5 39.8 41 40.8 44 41.5
-                C 42.5 48 41 56 37.5 73.5
-                L 62.5 73.5
-                C 59 56 57.5 48 56 41.5
-                C 59 40.8 61.5 39.8 61.5 38.5
-                C 61.5 36.5 57.5 34.5 53 33
-                C 57 31.5 59.5 28 59.5 24
-                C 59.5 18.7 55 14.5 50 14.5
-                Z
-              "
-              fill={shadowFill}
-              opacity="0.25"
-            />
+          <path
+            d="M41.2 23.5 C41.3 18.5 44.5 15.3 48.1 14.4"
+            fill="none"
+            stroke={highlight}
+            strokeWidth="1.65"
+            strokeLinecap="round"
+            opacity={isWhite ? '0.82' : '0.7'}
+          />
+
+          {ring(40, 13.7, 2.1)}
+
+          {stemHighlight(
+            "M44 45 C42.2 53 41 63.5 38.5 71.5",
+            isWhite ? 0.82 : 0.68
           )}
 
-          {/* Exact Specular Highlights as seen in Adobe Stock #249534780 */}
-          {/* 1. Ball head crescent highlight */}
           <path
-            d="M 42 24 C 41 20 43 16.5 47 15 C 45 17 43.5 20.5 44 24.5 C 44 25.5 42.2 25.5 42 24 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
+            d="M37 77.3 Q50 75.3 63 77.3"
+            fill="none"
+            stroke={highlight}
+            strokeWidth="1.15"
+            opacity={isWhite ? '0.65' : '0.65'}
           />
 
-          {/* 2. Collar ring highlight */}
-          <path
-            d="M 41 38.5 C 45 37.8 54 37.8 58 38.5 C 54 39.2 45 39.2 41 38.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.85}
-          />
-
-          {/* 3. Stem left curvature reflection */}
-          <path
-            d="M 44 44 C 42.8 51 42 59 38.5 71.5 C 39.8 61 41 51 45.2 44 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
-
-          {/* 4. Torus ring highlight */}
-          <path
-            d="M 37 77 C 43 76.2 56 76.2 62 77 C 56 77.8 43 77.8 37 77 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 5. Broad base horizontal reflection */}
-          <path
-            d="M 28 89 C 38 87.8 52 87.8 63 89.2 C 52 90.5 38 90.5 28 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {base}
         </svg>
       );
 
-    case 'r': // ROOK (CASTLE)
+    case 'r':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="94" rx="31" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main Rook Silhouette: 4 merlons, 3 crenels, flared corbel, tapered shaft, tiered base */}
+          {/* ROOK — classic four-merlon Staunton crown */}
           <path
-            d="
-              M 22 17.5
-              L 28.5 17.5
-              L 28.5 25
-              L 36 25
-              L 36 18.5
-              L 44.5 18.5
-              L 44.5 25
-              L 55.5 25
-              L 55.5 18.5
-              L 64 18.5
-              L 64 25
-              L 71.5 25
-              L 71.5 17.5
-              L 78 17.5
-              L 77 28.5
-              C 77 30 74 31 71 31.5
-              C 67 34 65.5 37 65.5 40
-              C 64.5 50 65.5 62 67.5 73.5
-              C 69.5 74.2 71 75.3 71 76.5
-              C 71 77.8 69.2 78.8 66.8 79.4
-              C 70 81 78 84.5 80 88
-              L 81 92.5
-              C 81 93.5 80 94 78.5 94
-              L 21.5 94
-              C 20 94 19 93.5 19 92.5
-              L 20 88
-              C 22 84.5 30 81 33.2 79.4
-              C 30.8 78.8 29 77.8 29 76.5
-              C 29 75.3 30.5 74.2 32.5 73.5
-              C 34.5 62 35.5 50 34.5 40
-              C 34.5 37 33 34 29 31.5
-              C 26 31 23 30 23 28.5
-              L 22 17.5
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M18.5 16.5
+               H30.5 V24.8 H38 V18 H47 V24.8
+               H53 V18 H62 V24.8 H69.5 V16.5 H81.5
+               L80 29
+               Q79.7 31 74 32.7
+               Q67.4 35 66.1 40.8
+               C64.8 50.8 65.5 62.5 68.4 72
+               Q69.2 74.3 72 76
+               Q73.5 77.5 70.5 79.2
+               Q67.1 81 62.5 81.5
+               H37.5
+               Q32.9 81 29.5 79.2
+               Q26.5 77.5 28 76
+               Q30.8 74.3 31.6 72
+               C34.5 62.5 35.2 50.8 33.9 40.8
+               Q32.6 35 26 32.7
+               Q20.3 31 20 29 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.5"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {isWhite && (
-            <path
-              d="
-                M 24 28.5
-                H 76
-                V 31
-                C 71 32.5 66 35 66 40
-                C 65 50 66 62 68 73.5
-                H 32
-                C 34 62 35 50 34 40
-                C 34 35 29 32.5 24 31
-                Z
-              "
-              fill={shadowFill}
-              opacity="0.25"
-            />
+          <path d="M20.5 28.9 Q50 26.8 79.5 28.9"
+            fill="none" stroke={highlight} strokeWidth="1.45"
+            opacity={isWhite ? '0.78' : '0.7'} />
+
+          {stemHighlight(
+            "M35.5 39.5 C37 49 36.7 61.5 33.8 71.2",
+            isWhite ? 0.8 : 0.67
           )}
 
-          {/* Highlights */}
-          {/* 1. Under-battlement horizontal rim */}
-          <path
-            d="M 26 29.5 C 36 29 64 29 74 29.5 C 64 30.2 36 30.2 26 29.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.9}
-          />
-
-          {/* 2. Tower neck highlight */}
-          <path
-            d="M 33 34 C 40 33.2 60 33.2 67 34 C 60 34.8 40 34.8 33 34 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 3. Long tower left flank specular streak */}
-          <path
-            d="M 35.5 40 C 36.5 50 36 61 33.5 71.5 C 35 61 36 50 36.8 40 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
-
-          {/* 4. Torus ring reflection */}
-          <path
-            d="M 33 77 C 42 76.2 58 76.2 67 77 C 58 77.8 42 77.8 33 77 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 5. Broad base horizontal reflection */}
-          <path
-            d="M 25 89 C 36 87.8 54 87.8 67 89.2 C 54 90.5 36 90.5 25 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {ring(77, 20, 2.25)}
+          {base}
         </svg>
       );
 
-    case 'n': // KNIGHT (HORSE)
+    case 'n':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="94" rx="31" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main Knight Silhouette: Facing left, pointed ear, chiseled snout, 4 stylized mane crests */}
+          {/* KNIGHT — classic Staunton horse, cleaner and more substantial */}
           <path
-            d="
-              M 30.5 13
-              C 30.5 13 32 17.5 31.5 21
-              C 28 23 21 27 18 30.5
-              C 16 33 16 34.5 17 35.5
-              C 17.8 36.2 19.5 35.5 21.5 34
-              C 21.8 34.8 21.5 36.5 19.5 38.5
-              C 18.5 39.5 19.5 40.5 21 40
-              C 24.5 38.5 27 34.5 29 33.5
-              C 27.5 37.5 27 42 29 46
-              C 27.5 50 29.5 58 32.5 65
-              C 34.5 69.5 35.5 73.5 35.5 73.5
-              C 33.5 74.2 32 75.3 32 76.5
-              C 32 77.8 33.8 78.8 36.2 79.4
-              C 33 81 25 84.5 23 88
-              L 22 92.5
-              C 22 93.5 23 94 24.5 94
-              L 76.5 94
-              C 78 94 79 93.5 79 92.5
-              L 78 88
-              C 76 84.5 68 81 64.8 79.4
-              C 67.2 78.8 69 77.8 69 76.5
-              C 69 75.3 67.5 74.2 65.5 73.5
-              C 65.5 73.5 66 69 64 61
-              C 68.5 58 72 50 72 44
-              C 70.5 45.5 67 47 65.5 47
-              C 69.5 42 72.5 36 71 30
-              C 69 31.5 66 33 64.5 33
-              C 67.5 27 69 21 66 16
-              C 63.5 18 60 20 57.5 20.5
-              C 58 17 56 14 51.5 11.5
-              C 48 13.5 44 14.5 41 14.8
-              C 39 12 36 10.5 34 10.5
-              C 32 10.5 30.5 13 30.5 13
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M34.5 82
+               C34.8 75 34.1 68.2 33.2 61
+               C32 51.2 34 43.2 39.3 36.8
+               C43.2 32.1 48.2 28.7 54.2 25.8
+               C56.2 21.2 56.7 16.2 54.8 11.5
+               C59.6 13.2 63 17.3 64.2 22.2
+               C67.1 19.7 71.1 17.6 75.1 17.2
+               C74.3 23 72.3 27.6 68.4 31.9
+               C74 32.1 79.4 34.2 82.6 38.2
+               C85.8 42.1 86.5 46.9 84.5 50.8
+               C82.4 54.9 77.9 56.7 72.6 56.5
+               L65.1 55.7
+               C61.5 61.4 60.5 67.9 62.5 74
+               L66.5 82 Z
+
+               M40 37
+               C34.5 38.2 28.6 40.2 23.7 43
+               C19.2 45.6 16.6 48.3 15.8 50.5
+               C16.8 52.6 20.2 53.1 24.3 51.9
+               L31.7 49.5
+               C29.3 52.7 28.3 55.4 29.1 57.2
+               C30.6 59.7 35 58.6 39.5 54.6
+               L45.1 49.2
+               C48.3 45.9 47.3 41.2 44 38 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.55"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {/* Stylized Mane cutaway slits matching photo */}
-          {/* Slit between Tuft 1 & 2 */}
-          <path
-            d="M 57.5 20.5 C 53 23 48 24 45 23.5"
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          {/* Slit between Tuft 2 & 3 */}
-          <path
-            d="M 64.5 33 C 58 35 52 36 48 34"
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
-          {/* Slit between Tuft 3 & 4 */}
-          <path
-            d="M 65.5 47 C 59 48 53 47 50 44"
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
-            fill="none"
-          />
+          {/* eye */}
+          <ellipse cx="67.3" cy="39.3" rx="2.5" ry="2.25"
+            fill={isWhite ? '#4B5563' : '#03060A'} />
+          <circle cx="68" cy="38.7" r="0.7" fill="#fff" opacity="0.9" />
 
-          {/* Knight's Distinct Carved Eye & Brow */}
-          <path
-            d="M 24 24.5 C 27 24.5 29 27 28 29 C 25.5 29 23.5 26.5 24 24.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
-          <path
-            d="M 23 23 C 26 22 29 23.5 30 25"
-            stroke={highlightFill}
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity={highlightOpacity}
-          />
+          {/* nostril */}
+          <ellipse cx="20.8" cy="49.3" rx="1.9" ry="1.15" fill={outline} />
 
-          {/* Nostril & Mouth Highlight */}
-          <path
-            d="M 18.5 34.5 C 20.5 33.5 22 34 22 34"
-            stroke={highlightFill}
-            strokeWidth="1"
-            strokeLinecap="round"
-            opacity={highlightOpacity * 0.8}
-          />
+          {/* jaw / mouth */}
+          <path d="M16.5 53.7 Q22.5 55.7 29.8 52.7"
+            fill="none" stroke={outline} strokeWidth="1"
+            strokeLinecap="round" />
 
-          {/* Chest Specular Highlight Curve */}
-          <path
-            d="M 30.5 48 C 29 55 31 63 34 71 C 32.5 63 31.5 55 32 48 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {/* mane ridges */}
+          <path d="M56.5 27 C51.2 35 47.6 43 46.8 51 C46 61 48.8 70.8 43 81"
+            fill="none" stroke={highlight} strokeWidth="1.9"
+            strokeLinecap="round" opacity={isWhite ? '0.68' : '0.58'} />
+          <path d="M61.8 29 C57 36.5 54 44 54 51"
+            fill="none" stroke={outline} strokeWidth="1.35" opacity="0.75" />
 
-          {/* Mane crest highlight lines */}
-          <path
-            d="M 43 16 C 47 18 52 23 54 28"
-            stroke={highlightFill}
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity={highlightOpacity * 0.7}
-          />
-          <path
-            d="M 49 31 C 53 35 58 40 60 46"
-            stroke={highlightFill}
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity={highlightOpacity * 0.7}
-          />
+          {/* ears */}
+          <path d="M59 15 Q61.3 20 61.2 24.2"
+            fill="none" stroke={highlight} strokeWidth="1.15"
+            strokeLinecap="round" opacity="0.7" />
+          <path d="M72.4 20 Q70.6 25.2 67.9 29.2"
+            fill="none" stroke={highlight} strokeWidth="1.15"
+            strokeLinecap="round" opacity="0.65" />
 
-          {/* Base Horizontal Reflection */}
-          <path
-            d="M 28 89 C 38 87.8 54 87.8 66 89.2 C 54 90.5 38 90.5 28 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {/* chest highlight */}
+          {stemHighlight(
+            "M37.5 50 C35.6 59 36.8 69.4 39.2 77.8",
+            isWhite ? 0.74 : 0.62
+          )}
+
+          {base}
         </svg>
       );
 
-    case 'b': // BISHOP
+    case 'b':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="94" rx="30" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main Bishop Silhouette: Finial ball, oval mitre with deep right-hand cut, waisted stem, flared base */}
+          {/* BISHOP — tall, narrow mitre with unmistakable diagonal cut */}
           <path
-            d="
-              M 50 9
-              C 48 9 46.5 10.5 46.5 12.5
-              C 46.5 13.5 47 14.3 48 14.8
-              C 41 17.5 36.5 24 36.5 31
-              C 36.5 37 40 41.5 44 43.5
-              C 40 44.5 37 46 37 47.5
-              C 37 49 39.5 50.2 43 50.8
-              C 41.5 57 40 64 36 73.5
-              C 34 74.2 32.5 75.3 32.5 76.5
-              C 32.5 77.8 34.3 78.8 36.7 79.4
-              C 33.5 81 25.5 84.5 23.5 88
-              L 22.5 92.5
-              C 22.5 93.5 23.5 94 25 94
-              L 75 94
-              C 76.5 94 77.5 93.5 77.5 92.5
-              L 76.5 88
-              C 74.5 84.5 66.5 81 63.3 79.4
-              C 65.7 78.8 67.5 77.8 67.5 76.5
-              C 67.5 75.3 66 74.2 64 73.5
-              C 60 64 58.5 57 57 50.8
-              C 60.5 50.2 63 49 63 47.5
-              C 63 46 60 44.5 56 43.5
-              C 60 41.5 63.5 37 63.5 31
-              C 63.5 24 59 17.5 52 14.8
-              C 53 14.3 53.5 13.5 53.5 12.5
-              C 53.5 10.5 52 9 50 9
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M50 7.5
+               C47.5 7.5 45.8 9.3 45.8 11.7
+               C45.8 13.2 46.6 14.2 47.8 14.8
+               C40.7 17.6 36.1 24.3 36.1 31.7
+               C36.1 38 39.5 42.4 43.7 44.3
+               C39.7 45 36.8 46.3 36.8 48.1
+               C36.8 49.9 39.4 51.1 43 51.7
+               C41.5 58.2 39.8 66 36.3 72.5
+               Q35 74.8 31 76.5
+               Q28.2 78 31.1 79.6
+               Q33.8 81 37 81.6
+               Q29.2 83 23 87
+               Q20.1 89 19.6 92.4
+               Q19.6 94 22.8 94
+               H77.2
+               Q80.4 94 80.4 92.4
+               Q79.9 89 77 87
+               Q70.8 83 63 81.6
+               Q66.2 81 68.9 79.6
+               Q71.8 78 69 76.5
+               Q65 74.8 63.7 72.5
+               C60.2 66 58.5 58.2 57 51.7
+               C60.6 51.1 63.2 49.9 63.2 48.1
+               C63.2 46.3 60.3 45 56.3 44.3
+               C60.5 42.4 63.9 38 63.9 31.7
+               C63.9 24.3 59.3 17.6 52.2 14.8
+               C53.4 14.2 54.2 13.2 54.2 11.7
+               C54.2 9.3 52.5 7.5 50 7.5 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.5"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {/* The Classic Bishop's Mitre Cut (Distinctive diagonal slash on right side) */}
-          <path
-            d="M 54 20 L 44 30 L 46 32 L 57 21 Z"
-            fill={isWhite ? '#1E293B' : '#0B0F16'}
-            stroke={isWhite ? '#1E293B' : '#FFFFFF'}
-            strokeWidth="0.8"
-          />
+          {/* classic bishop slit */}
+          <path d="M56.8 18.2 L43.1 31.8 L46.8 34.2 L59 20.2 Z"
+            fill={isWhite ? '#606A75' : '#05080D'}
+            stroke={outline} strokeWidth="0.75" />
 
-          {/* Highlights */}
-          {/* 1. Finial ball highlight */}
-          <circle cx="49" cy="11.5" r="1" fill={highlightFill} opacity={highlightOpacity} />
+          <path d="M40 27 C38.3 33.2 40.2 39.4 43.5 42.2"
+            fill="none" stroke={highlight} strokeWidth="1.6"
+            strokeLinecap="round" opacity={isWhite ? '0.8' : '0.64'} />
 
-          {/* 2. Oval Mitre left specular curve */}
-          <path
-            d="M 39 26 C 37.5 30 38.5 35 41.5 39 C 40 35 39 30 40.5 26 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {stemHighlight(
+            "M43 53 C41.5 60.5 40 67 37.4 72.2",
+            isWhite ? 0.8 : 0.66
+          )}
 
-          {/* 3. Collar highlight */}
-          <path
-            d="M 40 47.5 C 45 46.8 55 46.8 60 47.5 C 55 48.2 45 48.2 40 47.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.85}
-          />
-
-          {/* 4. Stem left reflection streak */}
-          <path
-            d="M 43.5 53 C 42.2 60 41.5 67 38 72 C 39.5 65 40.5 58 44.5 53 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
-
-          {/* 5. Torus highlight */}
-          <path
-            d="M 36 77 C 43 76.2 57 76.2 64 77 C 57 77.8 43 77.8 36 77 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 6. Base horizontal reflection */}
-          <path
-            d="M 27 89 C 38 87.8 53 87.8 65 89.2 C 53 90.5 38 90.5 27 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {ring(48, 13.4, 2.15)}
+          {base}
         </svg>
       );
 
-    case 'q': // QUEEN
+    case 'q':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="94" rx="33" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main Queen Silhouette: Finial bead, scalloped 5-point coronet crown, double collar, tapered stem, stately base */}
+          {/* QUEEN — classic broad five-point coronet */}
           <path
-            d="
-              M 50 8.5
-              C 48.5 8.5 47.2 9.7 47.2 11.2
-              C 47.2 12.2 47.8 13 48.6 13.5
-              C 46 16.5 42 20 39.5 17.5
-              C 38 16 35 22 31.5 21
-              C 33 26 36 31 41 33.5
-              C 37.5 34.8 35 36.5 35 38
-              C 35 39.5 37.5 40.8 41.5 41.5
-              C 39.5 48 38 56 34.5 73.5
-              C 32 74.2 30.5 75.3 30.5 76.5
-              C 30.5 77.8 32.5 78.8 35.2 79.4
-              C 32 81 23 84.5 21 88
-              L 20 92.5
-              C 20 93.5 21 94 22.5 94
-              L 77.5 94
-              C 79 94 80 93.5 80 92.5
-              L 79 88
-              C 77 84.5 68 81 64.8 79.4
-              C 67.5 78.8 69.5 77.8 69.5 76.5
-              C 69.5 75.3 68 74.2 65.5 73.5
-              C 62 56 60.5 48 58.5 41.5
-              C 62.5 40.8 65 39.5 65 38
-              C 65 36.5 62.5 34.8 59 33.5
-              C 64 31 67 26 68.5 21
-              C 65 22 62 16 60.5 17.5
-              C 58 20 54 16.5 51.4 13.5
-              C 52.2 13 52.8 12.2 52.8 11.2
-              C 52.8 9.7 51.5 8.5 50 8.5
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M50 6.5
+               C47.5 6.5 45.8 8.2 45.8 10.3
+               C45.8 11.8 46.7 12.9 48 13.6
+               L41.8 19.7
+               C39.3 22 36.7 20.2 34.1 18.1
+               L30.6 16.1
+               C31.2 22.9 34.3 28.9 40.3 32.1
+               C36.8 33.6 34.3 35.2 34.3 37.2
+               C34.3 39.2 37 40.5 41.3 41.2
+               C39.2 48.5 37.5 59.2 34.2 72.5
+               Q33 74.7 29 76.5
+               Q26.3 78 29.1 79.6
+               Q32.2 81 35.9 81.6
+               Q28 83 21.7 87
+               Q18.7 89 18.2 92.4
+               Q18.2 94 21.5 94
+               H78.5
+               Q81.8 94 81.8 92.4
+               Q81.3 89 78.3 87
+               Q72 83 64.1 81.6
+               Q67.8 81 70.9 79.6
+               Q73.7 78 71 76.5
+               Q67 74.7 65.8 72.5
+               C62.5 59.2 60.8 48.5 58.7 41.2
+               C63 40.5 65.7 39.2 65.7 37.2
+               C65.7 35.2 63.2 33.6 59.7 32.1
+               C65.7 28.9 68.8 22.9 69.4 16.1
+               L65.9 18.1
+               C63.3 20.2 60.7 22 58.2 19.7
+               L52 13.6
+               C53.3 12.9 54.2 11.8 54.2 10.3
+               C54.2 8.2 52.5 6.5 50 6.5 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.5"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {/* Coronet Inner Scallop Shadow/Structure */}
-          <path
-            d="
-              M 31.5 21
-              C 35 25 43 27 50 27
-              C 57 27 65 25 68.5 21
-              C 66 26 59 31 50 31
-              C 41 31 34 26 31.5 21
-              Z
-            "
-            fill={isWhite ? shadowFill : '#0A0E15'}
-            opacity={isWhite ? 0.35 : 0.85}
-          />
+          <path d="M31.8 18 Q50 29.2 68.2 18"
+            fill="none" stroke={highlight} strokeWidth="1.35"
+            opacity={isWhite ? '0.76' : '0.65'} />
+          <path d="M35.7 23 Q50 30.8 64.3 23"
+            fill="none" stroke={outline} strokeWidth="1"
+            opacity="0.68" />
 
-          {/* Highlights */}
-          {/* 1. Finial bead highlight */}
-          <circle cx="49" cy="10.5" r="1" fill={highlightFill} opacity={highlightOpacity} />
+          {ring(37.2, 15.1, 2.15)}
 
-          {/* 2. Crown Left Crest Reflection */}
-          <path
-            d="M 33 22 C 34.5 26 37 29 41 32 C 38.5 29 36 26 34.5 22 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {stemHighlight(
+            "M41.8 43 C40 52.5 38.8 63 36 72",
+            isWhite ? 0.82 : 0.68
+          )}
 
-          {/* 3. Upper Collar Rim */}
-          <path
-            d="M 38 38 C 43 37.2 57 37.2 62 38 C 57 38.8 43 38.8 38 38 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.85}
-          />
-
-          {/* 4. Long Stem Specular Highlight */}
-          <path
-            d="M 42 43 C 40.5 51 39.5 60 36 71.5 C 37.5 60 38.5 51 43.2 43 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
-
-          {/* 5. Torus Highlight */}
-          <path
-            d="M 34 77 C 42 76.2 58 76.2 66 77 C 58 77.8 42 77.8 34 77 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 6. Base Reflection */}
-          <path
-            d="M 25 89 C 36 87.8 54 87.8 67 89.2 C 54 90.5 36 90.5 25 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {base}
         </svg>
       );
 
-    case 'k': // KING
+    case 'k':
       return (
-        <svg viewBox="0 0 100 100" className={className} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="50" cy="94" rx="34" ry="3.5" fill="black" opacity="0.18" />
+        <svg viewBox="0 0 100 100" className={className} xmlns="http://www.w3.org/2000/svg">
+          {defs}
+          {shadow}
 
-          {/* Main King Silhouette: Latin Cross Pattee on apex, domed royal crown cap, flared rim, thick neck collar, tapered shaft, grand stepped base */}
+          {/* KING — dominant Staunton crown and cross */}
           <path
-            d="
-              M 48 4
-              L 52 4
-              L 52 7
-              L 56.5 7
-              L 56.5 10.5
-              L 52 10.5
-              L 52 13.5
-              C 57 14.5 63 17 64.5 21.5
-              C 66 25 68 26.5 69.5 28
-              C 67 29.5 62 30.5 58 31
-              C 62 32.2 64.5 33.8 64.5 35.5
-              C 64.5 37.2 61.5 38.8 57 39.5
-              C 60 48 61.5 57 65.5 73.5
-              C 68 74.2 70 75.3 70 76.5
-              C 70 77.8 68 78.8 65 79.4
-              C 68 81 77 84.5 79 88
-              L 80 92.5
-              C 80 93.5 79 94 77.5 94
-              L 22.5 94
-              C 21 94 20 93.5 20 92.5
-              L 21 88
-              C 23 84.5 32 81 35 79.4
-              C 32 78.8 30 77.8 30 76.5
-              C 30 75.3 32 74.2 34.5 73.5
-              C 38.5 57 40 48 43 39.5
-              C 38.5 38.8 35.5 37.2 35.5 35.5
-              C 35.5 33.8 38 32.2 42 31
-              C 38 30.5 33 29.5 30.5 28
-              C 32 26.5 34 25 35.5 21.5
-              C 37 17 43 14.5 48 13.5
-              L 48 10.5
-              L 43.5 10.5
-              L 43.5 7
-              L 48 7
-              L 48 4
-              Z
-            "
-            fill={mainFill}
-            stroke={strokeColor}
-            strokeWidth={strokeWidth}
+            d="M46 3 H54 V7.2 H58.2 V12 H53.5 V14.7
+               C59.2 16 64.1 19.3 65.8 24
+               Q67 27.4 71 29.8
+               Q67.8 32 61 33
+               Q65.7 34.3 66.2 37.2
+               Q66.4 40.2 58.2 41
+               C60.2 49.5 61.9 60.5 65.7 72.5
+               Q66.8 74.8 70.8 76.5
+               Q73.7 78 70.9 79.6
+               Q67.8 81 64.1 81.6
+               Q72 83 78.3 87
+               Q81.3 89 81.8 92.4
+               Q81.8 94 78.5 94
+               H21.5
+               Q18.2 94 18.2 92.4
+               Q18.7 89 21.7 87
+               Q28 83 35.9 81.6
+               Q32.2 81 29.1 79.6
+               Q26.3 78 29.2 76.5
+               Q33.2 74.8 34.3 72.5
+               C38.1 60.5 39.8 49.5 41.8 41
+               Q33.6 40.2 33.8 37.2
+               Q34.3 34.3 39 33
+               Q32.2 32 29 29.8
+               Q33 27.4 34.2 24
+               C35.9 19.3 40.8 16 46.5 14.7
+               V12 H41.8 V7.2 H46 Z"
+            fill={`url(#${bodyId})`}
+            stroke={outline}
+            strokeWidth="1.55"
             strokeLinejoin="round"
-            strokeLinecap="round"
           />
 
-          {/* Highlights */}
-          {/* 1. Latin Cross Specular Highlight */}
-          <path
-            d="M 48.5 5.5 H 51.5 V 7.5 H 55.5 V 9.5 H 51.5 V 13"
-            stroke={highlightFill}
-            strokeWidth="1.2"
-            strokeLinecap="round"
-            opacity={highlightOpacity}
-          />
+          {/* cross highlight */}
+          <path d="M48 4.8 H52 V8.4 H55.8 V10.3 H52 V14"
+            fill="none" stroke={highlight} strokeWidth="1.35"
+            strokeLinecap="round" opacity={isWhite ? '0.84' : '0.72'} />
 
-          {/* 2. Crown Dome Left Contour */}
-          <path
-            d="M 46 15 C 41 17 37 21 36 26 C 38 22 42 18 47 16 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          <path d="M45.8 16.2 C41.2 18.3 37.5 22.2 36.2 26.7"
+            fill="none" stroke={highlight} strokeWidth="1.65"
+            strokeLinecap="round" opacity={isWhite ? '0.82' : '0.68'} />
 
-          {/* 3. Crown Rim Highlight */}
-          <path
-            d="M 33 28.5 C 41 27.5 59 27.5 67 28.5 C 59 29.5 41 29.5 33 28.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.9}
-          />
+          <path d="M31.5 30 Q50 27.8 68.5 30"
+            fill="none" stroke={highlight} strokeWidth="1.4"
+            opacity={isWhite ? '0.78' : '0.7'} />
 
-          {/* 4. Neck Collar Highlight */}
-          <path
-            d="M 38 35.5 C 44 34.8 56 34.8 62 35.5 C 56 36.2 44 36.2 38 35.5 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.85}
-          />
+          {ring(38, 16, 2.2)}
 
-          {/* 5. Majestic Stem Specular Highlight */}
-          <path
-            d="M 43 41 C 41.5 50 40 60 36 71.5 C 37.8 60 39.5 50 44.5 41 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {stemHighlight(
+            "M42.8 43 C40.9 52.5 39.5 64 36.5 72",
+            isWhite ? 0.84 : 0.7
+          )}
 
-          {/* 6. Torus Highlight */}
-          <path
-            d="M 34 77 C 42 76.2 58 76.2 66 77 C 58 77.8 42 77.8 34 77 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity * 0.75}
-          />
-
-          {/* 7. Stately Grand Base Reflection */}
-          <path
-            d="M 24 89 C 36 87.8 54 87.8 68 89.2 C 54 90.5 36 90.5 24 89 Z"
-            fill={highlightFill}
-            opacity={highlightOpacity}
-          />
+          {base}
         </svg>
       );
 
@@ -666,3 +524,5 @@ export const StauntonChessPiece: React.FC<StauntonChessPieceProps> = React.memo(
       return null;
   }
 });
+
+StauntonChessPiece.displayName = 'StauntonChessPiece';
